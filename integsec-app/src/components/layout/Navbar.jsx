@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import logo from '../../assets/images/logo.jpeg';
+import logo from '../../assets/images/logo.png';
 
 const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -137,11 +137,41 @@ const Navbar = () => {
             {/* Logo */}
             <Link to="/" className="flex items-center flex-shrink-0 z-50">
               <div className="px-2 py-1 sm:px-3 sm:py-2">
-                <img
-                  src={logo}
-                  className="w-12 sm:w-14 md:w-16 rounded-md"
-                  alt="Logo"
-                />
+                <div className="relative">
+                          {/* Strongest outer glow */}
+                          <img
+                            src={logo}
+                            className="absolute inset-0 w-full blur-3xl opacity-60"
+                            alt=""
+                            aria-hidden="true"
+                            style={{ filter: 'brightness(1.8)' }}
+                          />
+                          
+                          {/* Medium glow */}
+                          <img
+                            src={logo}
+                            className="absolute inset-0 w-full blur-xl opacity-70"
+                            alt=""
+                            aria-hidden="true"
+                            style={{ filter: 'brightness(1.6)' }}
+                          />
+                          
+                          {/* Inner glow */}
+                          <img
+                            src={logo}
+                            className="absolute inset-0 w-full blur-md opacity-80"
+                            alt=""
+                            aria-hidden="true"
+                            style={{ filter: 'brightness(1.4)' }}
+                          />
+                          
+                          {/* Main logo with intense sharp glow */}
+                          <img
+                            src={logo}
+                            className="relative w-12 sm:w-14 md:w-16 rounded-md drop-shadow-[0_0_20px_#84cc16] drop-shadow-[0_0_10px_#84cc16]"
+                            alt="HackPro Academy Logo"
+                          />
+                        </div>
               </div>
             </Link>
 

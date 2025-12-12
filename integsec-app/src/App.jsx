@@ -13,10 +13,12 @@ import Certificate from "./pages/Certificate";
 import VerifyCertificate from "./pages/VerifyCertificate";
 import Blog from "./pages/Blog"; // Add this
 import BlogDetail from "./pages/BlogDetail";
+import ScrollToTop from "./components/layout/ScrollToTop"
 
 function App() {
   return (
     <Router>
+      <ScrollToTop />
       <Routes>
         <Route path="/" element={<Homepage />} />
         <Route path="/about" element={<About />} />

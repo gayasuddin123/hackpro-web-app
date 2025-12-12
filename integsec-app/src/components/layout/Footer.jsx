@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import logo from '../../assets/images/logo.jpeg';
+import logo from '../../assets/images/logo.png';
 
 const Footer = () => {
   const [email, setEmail] = useState('');
@@ -107,17 +107,50 @@ const Footer = () => {
           {/* Column 1 - Brand Info */}
           <div className="sm:col-span-2 lg:col-span-1">
             {/* Logo */}
-            <Link to="/" className="inline-block mb-6">
-              <div className="relative">
-                {/* Glow Effect */}
-                <div className="absolute -inset-2 bg-lime-400/20 rounded-xl blur-xl opacity-60" />
-                <img
-                  src={logo}
-                  className="relative w-20 sm:w-24 rounded-lg border-2 border-lime-400/30 shadow-lg shadow-lime-400/20"
-                  alt="Logo"
-                />
-              </div>
-            </Link>
+<Link to="/" className="inline-block">
+  <div className="relative w-20 h-20 sm:w-24 sm:h-24"> {/* Container size */}
+    
+    {/* 1. Ultra Wide Atmospheric Glow (The "Aura") */}
+    <img
+      src={logo}
+      className="absolute inset-0 w-full blur-[40px] opacity-70"
+      alt=""
+      aria-hidden="true"
+      style={{ filter: 'brightness(2) saturate(2)' }} 
+    />
+    
+    {/* 2. Strong Outer Glow */}
+    <img
+      src={logo}
+      className="absolute inset-0 w-full blur-3xl opacity-80"
+      alt=""
+      aria-hidden="true"
+      style={{ filter: 'brightness(2) saturate(1.5)' }}
+    />
+    
+    {/* 3. Core Intense Glow (Hot Center) */}
+    <img
+      src={logo}
+      className="absolute inset-0 w-full blur-xl opacity-90"
+      alt=""
+      aria-hidden="true"
+      style={{ filter: 'brightness(2.2)' }}
+    />
+    
+    {/* 4. Main Sharp Logo with Heavy Drop Shadows */}
+    <img
+      src={logo}
+      className="relative w-full z-10"
+      alt="HackPro Academy"
+      style={{ 
+        filter: ` 
+          drop-shadow(0 0 50px #84cc16) 
+          brightness(1.1)
+        `
+      }}
+    />
+  </div>
+</Link>
 
             {/* Description */}
             <p className="text-gray-400 text-sm leading-relaxed mb-6 max-w-xs">

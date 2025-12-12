@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import Layout from '../components/layout/Layout';
-import logo from '../assets/images/logo.jpeg';
+import logo from '../assets/images/logo.png';
 
 const Homepage = () => {
   const logoRef = useRef(null);
@@ -259,41 +259,72 @@ const Homepage = () => {
 
             {/* Right Content - 3D Logo Animation */}
             <div className="relative flex items-center justify-center order-1 lg:order-2">
-              <div ref={logoRef} className="relative transition-transform duration-100">
-                {/* Outer glow circle */}
-                <div className="absolute inset-0 rounded-full bg-lime-400/10 blur-3xl animate-pulse" />
+  <div ref={logoRef} className="relative transition-transform duration-100">
+    {/* Main radar circle */}
+    <div className="relative w-56 h-56 sm:w-64 sm:h-64 md:w-80 md:h-80 lg:w-96 lg:h-96 rounded-full border-2 border-lime-400/30 flex items-center justify-center">
+      
+      {/* Inner radar circles */}
+      <div className="absolute inset-4 sm:inset-6 md:inset-8 rounded-full border border-lime-400/20" />
+      <div className="absolute inset-8 sm:inset-12 md:inset-16 rounded-full border border-lime-400/10" />
 
-                {/* Main circle with border */}
-                <div className="relative w-56 h-56 sm:w-64 sm:h-64 md:w-80 md:h-80 lg:w-96 lg:h-96 rounded-full border-2 border-lime-400/30 flex items-center justify-center">
-                  {/* Inner circles */}
-                  <div className="absolute inset-4 sm:inset-6 md:inset-8 rounded-full border border-lime-400/20" />
-                  <div className="absolute inset-8 sm:inset-12 md:inset-16 rounded-full border border-lime-400/10" />
+      {/* Animated radar dots */}
+      <div className="hidden sm:block absolute w-2 h-2 bg-lime-400 rounded-full shadow-[0_0_15px_#84cc16] top-[10%] left-1/2 -translate-x-1/2 animate-[dotFloat_3s_ease-in-out_infinite]" />
+      <div className="hidden sm:block absolute w-2 h-2 bg-lime-400 rounded-full shadow-[0_0_15px_#84cc16] top-[30%] right-[15%] animate-[dotFloat_3s_ease-in-out_infinite_0.5s]" />
+      <div className="hidden sm:block absolute w-2 h-2 bg-lime-400 rounded-full shadow-[0_0_15px_#84cc16] bottom-[30%] right-[10%] animate-[dotFloat_3s_ease-in-out_infinite_1s]" />
+      <div className="hidden sm:block absolute w-2 h-2 bg-lime-400 rounded-full shadow-[0_0_15px_#84cc16] bottom-[10%] left-1/2 -translate-x-1/2 animate-[dotFloat_3s_ease-in-out_infinite_1.5s]" />
+      <div className="hidden sm:block absolute w-2 h-2 bg-lime-400 rounded-full shadow-[0_0_15px_#84cc16] bottom-[30%] left-[10%] animate-[dotFloat_3s_ease-in-out_infinite_2s]" />
+      <div className="hidden sm:block absolute w-2 h-2 bg-lime-400 rounded-full shadow-[0_0_15px_#84cc16] top-[30%] left-[15%] animate-[dotFloat_3s_ease-in-out_infinite_2.5s]" />
 
-                  {/* Animated dots */}
-                  <div className="hidden sm:block absolute w-2 h-2 bg-lime-400 rounded-full shadow-[0_0_15px_#84cc16] top-[10%] left-1/2 -translate-x-1/2 animate-[dotFloat_3s_ease-in-out_infinite]" />
-                  <div className="hidden sm:block absolute w-2 h-2 bg-lime-400 rounded-full shadow-[0_0_15px_#84cc16] top-[30%] right-[15%] animate-[dotFloat_3s_ease-in-out_infinite_0.5s]" />
-                  <div className="hidden sm:block absolute w-2 h-2 bg-lime-400 rounded-full shadow-[0_0_15px_#84cc16] bottom-[30%] right-[10%] animate-[dotFloat_3s_ease-in-out_infinite_1s]" />
-                  <div className="hidden sm:block absolute w-2 h-2 bg-lime-400 rounded-full shadow-[0_0_15px_#84cc16] bottom-[10%] left-1/2 -translate-x-1/2 animate-[dotFloat_3s_ease-in-out_infinite_1.5s]" />
-                  <div className="hidden sm:block absolute w-2 h-2 bg-lime-400 rounded-full shadow-[0_0_15px_#84cc16] bottom-[30%] left-[10%] animate-[dotFloat_3s_ease-in-out_infinite_2s]" />
-                  <div className="hidden sm:block absolute w-2 h-2 bg-lime-400 rounded-full shadow-[0_0_15px_#84cc16] top-[30%] left-[15%] animate-[dotFloat_3s_ease-in-out_infinite_2.5s]" />
+      {/* ============================================ */}
+      {/* CENTER LOGO WITH PURE GLOW (NO BLACK BG, NO BORDER GLOW) */}
+      {/* ============================================ */}
+      <div className="relative z-10 w-[58%]">
+        <div className="relative">
+          {/* Strongest outer glow */}
+          <img
+            src={logo}
+            className="absolute inset-0 w-full blur-3xl opacity-60"
+            alt=""
+            aria-hidden="true"
+            style={{ filter: 'brightness(1.8)' }}
+          />
+          
+          {/* Medium glow */}
+          <img
+            src={logo}
+            className="absolute inset-0 w-full blur-xl opacity-70"
+            alt=""
+            aria-hidden="true"
+            style={{ filter: 'brightness(1.6)' }}
+          />
+          
+          {/* Inner glow */}
+          <img
+            src={logo}
+            className="absolute inset-0 w-full blur-md opacity-80"
+            alt=""
+            aria-hidden="true"
+            style={{ filter: 'brightness(1.4)' }}
+          />
+          
+          {/* Main logo with intense sharp glow */}
+          <img
+            src={logo}
+            className="relative w-full drop-shadow-[0_0_20px_#84cc16] drop-shadow-[0_0_40px_#84cc16]"
+            alt="HackPro Academy Logo"
+          />
+        </div>
+      </div>
+      {/* ============================================ */}
 
-                  {/* Center logo */}
-                  <div className="relative z-10 w-1/2">
-                    <img
-                      src={logo}
-                      className="w-full px-4 sm:px-6 md:px-8 py-2 sm:py-3 md:py-4 rounded-lg shadow-2xl shadow-lime-400/50"
-                      alt="Logo"
-                    />
-                  </div>
+      {/* Vertical line top */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-px h-8 sm:h-12 md:h-16 bg-gradient-to-b from-lime-400 to-transparent" />
 
-                  {/* Vertical line top */}
-                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-px h-8 sm:h-12 md:h-16 bg-gradient-to-b from-lime-400 to-transparent" />
-
-                  {/* Vertical line bottom */}
-                  <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-px h-8 sm:h-12 md:h-16 bg-gradient-to-t from-lime-400 to-transparent" />
-                </div>
-              </div>
-            </div>
+      {/* Vertical line bottom */}
+      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-px h-8 sm:h-12 md:h-16 bg-gradient-to-t from-lime-400 to-transparent" />
+    </div>
+  </div>
+</div>
           </div>
         </div>
       </section>
