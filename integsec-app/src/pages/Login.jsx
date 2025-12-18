@@ -1,8 +1,17 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import Layout from '..//components/layout/Layout'; // Adjust path as needed
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import Layout from '../components/layout/Layout';
+import axios from 'axios';
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1';
 
 const Login = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  
+  // Get redirect path from location state (if user was redirected to login)
+  const from = location.state?.from?.pathname || '/';
+  
   const [formData, setFormData] = useState({
     email: '',
     password: ''
@@ -11,6 +20,61 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [focusedField, setFocusedField] = useState(null);
+  const [errors, setErrors] = useState({});
+  const [apiError, setApiError] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
+  const [remainingAttempts, setRemainingAttempts] = useState(null);
+  const [isLocked, setIsLocked] = useState(false);
+  const [lockoutTime, setLockoutTime] = useState(0);
+
+  // Check if user is already logged in
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      navigate('/', { replace: true });
+    }
+  }, [navigate]);
+
+  // Load remembered email
+  useEffect(() => {
+    const rememberedEmail = localStorage.getItem('rememberedEmail');
+    if (rememberedEmail) {
+      setFormData(prev => ({ ...prev, email: rememberedEmail }));
+      setRememberMe(true);
+    }
+  }, []);
+
+  // Clear API error after 5 seconds
+  useEffect(() => {
+    if (apiError) {
+      const timer = setTimeout(() => setApiError(''), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [apiError]);
+
+  // Lockout countdown timer
+  useEffect(() => {
+    let interval;
+    if (lockoutTime > 0) {
+      interval = setInterval(() => {
+        setLockoutTime(prev => {
+          if (prev <= 1) {
+            setIsLocked(false);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [lockoutTime]);
+
+  // Format lockout time
+  const formatLockoutTime = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -18,30 +82,164 @@ const Login = () => {
       ...prev,
       [name]: value
     }));
+    
+    // Clear error when user starts typing
+    if (errors[name]) {
+      setErrors(prev => ({
+        ...prev,
+        [name]: ''
+      }));
+    }
+    
+    // Clear API error
+    setApiError('');
   };
 
+  // Form Validation
+  const validateForm = () => {
+    const newErrors = {};
+    
+    if (!formData.email.trim()) {
+      newErrors.email = 'Email is required';
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      newErrors.email = 'Please enter a valid email';
+    }
+    
+    if (!formData.password) {
+      newErrors.password = 'Password is required';
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  // Handle Login Submit
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    if (!validateForm()) return;
+    
+    if (isLocked) {
+      setApiError(`Account is locked. Please try again in ${formatLockoutTime(lockoutTime)}`);
+      return;
+    }
+    
     setIsLoading(true);
+    setApiError('');
+    setSuccessMessage('');
+    setRemainingAttempts(null);
     
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    setIsLoading(false);
-    console.log('Login submitted:', formData);
+    try {
+      const response = await axios.post(`${API_URL}/auth/login`, {
+        email: formData.email.toLowerCase().trim(),
+        password: formData.password,
+      });
+      
+      if (response.data.success) {
+        // Handle Remember Me
+        if (rememberMe) {
+          localStorage.setItem('rememberedEmail', formData.email);
+        } else {
+          localStorage.removeItem('rememberedEmail');
+        }
+        
+        // Store token and user data
+        localStorage.setItem('token', response.data.token);
+        localStorage.setItem('user', JSON.stringify(response.data.user));
+        
+        // Set axios default header for future requests
+        axios.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
+
+        window.dispatchEvent(new Event('authChange'));
+        
+        setSuccessMessage('Login successful! Redirecting...');
+        
+        // Redirect after short delay
+        setTimeout(() => {
+          navigate(from, { replace: true });
+        }, 1500);
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      
+      const errorData = error.response?.data;
+      const message = errorData?.message || 'Login failed. Please try again.';
+      
+      setApiError(message);
+      
+      // Handle remaining attempts
+      if (errorData?.remainingAttempts !== undefined) {
+        setRemainingAttempts(errorData.remainingAttempts);
+      }
+      
+      // Handle account lockout
+      if (error.response?.status === 423) {
+        setIsLocked(true);
+        // Extract lockout time from message (e.g., "try again in 30 minutes")
+        const timeMatch = message.match(/(\d+)\s*minutes?/);
+        if (timeMatch) {
+          setLockoutTime(parseInt(timeMatch[1]) * 60);
+        } else {
+          setLockoutTime(30 * 60); // Default 30 minutes
+        }
+      }
+      
+      // Handle specific field errors
+      if (errorData?.errors) {
+        const fieldErrors = {};
+        errorData.errors.forEach(err => {
+          fieldErrors[err.field] = err.message;
+        });
+        setErrors(prev => ({ ...prev, ...fieldErrors }));
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
+  // Google Login
   const handleGoogleLogin = () => {
-    console.log('Google login clicked');
+    const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+    
+    if (!googleClientId) {
+      setApiError('Google login is not configured. Please contact support.');
+      return;
+    }
+    
+    const redirectUri = `${window.location.origin}/auth/google/callback`;
+    const scope = 'email profile';
+    
+    // Store the intended redirect path
+    sessionStorage.setItem('authRedirect', from);
+    
+    const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${googleClientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=${encodeURIComponent(scope)}&access_type=offline&prompt=consent`;
+    
+    window.location.href = googleAuthUrl;
   };
 
+  // GitHub Login
   const handleGitHubLogin = () => {
-    console.log('GitHub login clicked');
+    const githubClientId = import.meta.env.VITE_GITHUB_CLIENT_ID;
+    
+    if (!githubClientId) {
+      setApiError('GitHub login is not configured. Please contact support.');
+      return;
+    }
+    
+    const redirectUri = `${window.location.origin}/auth/github/callback`;
+    const scope = 'user:email';
+    
+    // Store the intended redirect path
+    sessionStorage.setItem('authRedirect', from);
+    
+    const githubAuthUrl = `https://github.com/login/oauth/authorize?client_id=${githubClientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scope)}`;
+    
+    window.location.href = githubAuthUrl;
   };
 
   return (
     <Layout>
-      <div className=" relative pt-24 sm:pt-28 md:pt-32 pb-12 sm:pb-16 md:pb-20 px-4 sm:px-6 z-10 min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-black flex items-center justify-center relative overflow-hidden">
+      <div className="relative pt-24 sm:pt-28 md:pt-32 pb-12 sm:pb-16 md:pb-20 px-4 sm:px-6 z-10 min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-black flex items-center justify-center relative overflow-hidden">
         
         {/* Animated Grid Background */}
         <div 
@@ -86,20 +284,36 @@ const Login = () => {
                   <div className="absolute inset-0 bg-yellow-500/20 rounded-full blur-xl animate-pulse scale-125" style={{ animationDelay: '0.5s' }} />
                   
                   {/* Icon Container */}
-                  <div className="relative w-20 h-20 rounded-full bg-gradient-to-br from-yellow-500/20 to-amber-500/10 border border-yellow-500/40 flex items-center justify-center shadow-2xl shadow-yellow-500/20">
-                    <svg 
-                      className="w-10 h-10 text-yellow-400" 
-                      fill="none" 
-                      stroke="currentColor" 
-                      viewBox="0 0 24 24"
-                    >
-                      <path 
-                        strokeLinecap="round" 
-                        strokeLinejoin="round" 
-                        strokeWidth={1.5} 
-                        d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" 
-                      />
-                    </svg>
+                  <div className={`relative w-20 h-20 rounded-full bg-gradient-to-br from-yellow-500/20 to-amber-500/10 border flex items-center justify-center shadow-2xl shadow-yellow-500/20 ${isLocked ? 'border-red-500/50' : 'border-yellow-500/40'}`}>
+                    {isLocked ? (
+                      <svg 
+                        className="w-10 h-10 text-red-400" 
+                        fill="none" 
+                        stroke="currentColor" 
+                        viewBox="0 0 24 24"
+                      >
+                        <path 
+                          strokeLinecap="round" 
+                          strokeLinejoin="round" 
+                          strokeWidth={1.5} 
+                          d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" 
+                        />
+                      </svg>
+                    ) : (
+                      <svg 
+                        className="w-10 h-10 text-yellow-400" 
+                        fill="none" 
+                        stroke="currentColor" 
+                        viewBox="0 0 24 24"
+                      >
+                        <path 
+                          strokeLinecap="round" 
+                          strokeLinejoin="round" 
+                          strokeWidth={1.5} 
+                          d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" 
+                        />
+                      </svg>
+                    )}
                   </div>
                 </div>
               </div>
@@ -107,12 +321,59 @@ const Login = () => {
               {/* Title & Subtitle */}
               <div className="text-center mb-8">
                 <h1 className="text-3xl md:text-4xl font-bold text-white mb-3 tracking-tight">
-                  Welcome Back
+                  {isLocked ? 'Account Locked' : 'Welcome Back'}
                 </h1>
                 <p className="text-gray-400 text-lg">
-                  Sign in to your account
+                  {isLocked 
+                    ? `Try again in ${formatLockoutTime(lockoutTime)}` 
+                    : 'Sign in to your account'
+                  }
                 </p>
               </div>
+
+              {/* Success Message */}
+              {successMessage && (
+                <div className="mb-6 p-4 bg-green-500/20 border border-green-500/50 rounded-xl text-green-400 text-center animate-fadeIn">
+                  <div className="flex items-center justify-center gap-2">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    {successMessage}
+                  </div>
+                </div>
+              )}
+
+              {/* API Error Message */}
+              {apiError && (
+                <div className="mb-6 p-4 bg-red-500/20 border border-red-500/50 rounded-xl text-red-400 text-center animate-fadeIn">
+                  <div className="flex items-center justify-center gap-2">
+                    <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span>{apiError}</span>
+                  </div>
+                  {remainingAttempts !== null && remainingAttempts > 0 && (
+                    <p className="mt-2 text-sm text-red-300">
+                      {remainingAttempts} attempt{remainingAttempts !== 1 ? 's' : ''} remaining before lockout
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {/* Lockout Warning */}
+              {isLocked && (
+                <div className="mb-6 p-4 bg-orange-500/20 border border-orange-500/50 rounded-xl text-orange-400 text-center animate-fadeIn">
+                  <div className="flex items-center justify-center gap-2">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                    <span>Too many failed attempts</span>
+                  </div>
+                  <div className="mt-2 text-2xl font-bold text-orange-300">
+                    {formatLockoutTime(lockoutTime)}
+                  </div>
+                </div>
+              )}
 
               {/* Login Form */}
               <form onSubmit={handleSubmit} className="space-y-6">
@@ -146,12 +407,21 @@ const Login = () => {
                         onChange={handleInputChange}
                         onFocus={() => setFocusedField('email')}
                         onBlur={() => setFocusedField(null)}
-                        required
-                        className="w-full pl-12 pr-4 py-4 bg-gray-950/80 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-yellow-500/50 focus:ring-2 focus:ring-yellow-500/20 transition-all duration-300"
+                        className={`w-full pl-12 pr-4 py-4 bg-gray-950/80 border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-yellow-500/50 focus:ring-2 focus:ring-yellow-500/20 transition-all duration-300 ${errors.email ? 'border-red-500' : 'border-gray-700'}`}
                         placeholder="Enter your email"
+                        disabled={isLoading || isLocked}
+                        autoComplete="email"
                       />
                     </div>
                   </div>
+                  {errors.email && (
+                    <p className="text-red-400 text-sm flex items-center gap-1 mt-1">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      {errors.email}
+                    </p>
+                  )}
                 </div>
 
                 {/* Password Field */}
@@ -183,9 +453,10 @@ const Login = () => {
                         onChange={handleInputChange}
                         onFocus={() => setFocusedField('password')}
                         onBlur={() => setFocusedField(null)}
-                        required
-                        className="w-full pl-12 pr-12 py-4 bg-gray-950/80 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-yellow-500/50 focus:ring-2 focus:ring-yellow-500/20 transition-all duration-300"
+                        className={`w-full pl-12 pr-12 py-4 bg-gray-950/80 border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-yellow-500/50 focus:ring-2 focus:ring-yellow-500/20 transition-all duration-300 ${errors.password ? 'border-red-500' : 'border-gray-700'}`}
                         placeholder="Enter your password"
+                        disabled={isLoading || isLocked}
+                        autoComplete="current-password"
                       />
                       
                       {/* Toggle Password Visibility */}
@@ -193,6 +464,7 @@ const Login = () => {
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
                         className="absolute right-4 z-10 text-gray-500 hover:text-yellow-400 transition-colors duration-300"
+                        disabled={isLoading || isLocked}
                       >
                         {showPassword ? (
                           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -207,18 +479,27 @@ const Login = () => {
                       </button>
                     </div>
                   </div>
+                  {errors.password && (
+                    <p className="text-red-400 text-sm flex items-center gap-1 mt-1">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      {errors.password}
+                    </p>
+                  )}
                 </div>
 
                 {/* Remember Me & Forgot Password */}
                 <div className="flex items-center justify-between">
                   {/* Remember Me Checkbox */}
-                  <label className="flex items-center gap-3 cursor-pointer group">
+                  <label className={`flex items-center gap-3 cursor-pointer group ${isLoading || isLocked ? 'opacity-60 cursor-not-allowed' : ''}`}>
                     <div className="relative">
                       <input
                         type="checkbox"
                         checked={rememberMe}
-                        onChange={(e) => setRememberMe(e.target.checked)}
+                        onChange={(e) => !isLoading && !isLocked && setRememberMe(e.target.checked)}
                         className="sr-only"
+                        disabled={isLoading || isLocked}
                       />
                       <div className={`w-5 h-5 rounded border-2 transition-all duration-300 flex items-center justify-center ${
                         rememberMe 
@@ -249,13 +530,17 @@ const Login = () => {
                 {/* Sign In Button */}
                 <button
                   type="submit"
-                  disabled={isLoading}
+                  disabled={isLoading || isLocked || successMessage}
                   className="relative w-full group"
                 >
                   {/* Button Glow */}
-                  <div className="absolute -inset-0.5 bg-gradient-to-r from-yellow-500 to-amber-500 rounded-xl blur opacity-70 group-hover:opacity-100 transition-opacity duration-300" />
+                  <div className={`absolute -inset-0.5 bg-gradient-to-r rounded-xl blur transition-opacity duration-300 ${isLocked ? 'from-red-500 to-orange-500 opacity-50' : 'from-yellow-500 to-amber-500 opacity-70 group-hover:opacity-100'}`} />
                   
-                  <div className="relative w-full py-4 px-6 bg-gradient-to-r from-yellow-500 to-amber-500 text-gray-900 font-bold text-lg rounded-xl hover:from-yellow-400 hover:to-amber-400 focus:outline-none focus:ring-4 focus:ring-yellow-500/30 transition-all duration-300 shadow-lg shadow-yellow-500/30 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-3">
+                  <div className={`relative w-full py-4 px-6 font-bold text-lg rounded-xl focus:outline-none focus:ring-4 transition-all duration-300 shadow-lg disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-3 ${
+                    isLocked 
+                      ? 'bg-gradient-to-r from-red-500 to-orange-500 text-white shadow-red-500/30' 
+                      : 'bg-gradient-to-r from-yellow-500 to-amber-500 text-gray-900 hover:from-yellow-400 hover:to-amber-400 focus:ring-yellow-500/30 shadow-yellow-500/30'
+                  }`}>
                     {isLoading ? (
                       <>
                         <svg className="w-6 h-6 animate-spin" fill="none" viewBox="0 0 24 24">
@@ -263,6 +548,20 @@ const Login = () => {
                           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                         </svg>
                         <span>Signing in...</span>
+                      </>
+                    ) : successMessage ? (
+                      <>
+                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        <span>Success!</span>
+                      </>
+                    ) : isLocked ? (
+                      <>
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                        </svg>
+                        <span>Account Locked</span>
                       </>
                     ) : (
                       <>
@@ -299,7 +598,8 @@ const Login = () => {
                 <button
                   type="button"
                   onClick={handleGoogleLogin}
-                  className="relative group flex items-center justify-center gap-3 py-4 px-6 bg-gray-800/50 border border-gray-700 rounded-xl hover:bg-gray-800 hover:border-gray-600 transition-all duration-300"
+                  disabled={isLoading || isLocked}
+                  className="relative group flex items-center justify-center gap-3 py-4 px-6 bg-gray-800/50 border border-gray-700 rounded-xl hover:bg-gray-800 hover:border-gray-600 transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   {/* Hover Glow */}
                   <div className="absolute -inset-0.5 bg-gradient-to-r from-red-500/20 to-yellow-500/20 rounded-xl blur opacity-0 group-hover:opacity-50 transition-opacity duration-300" />
@@ -320,7 +620,8 @@ const Login = () => {
                 <button
                   type="button"
                   onClick={handleGitHubLogin}
-                  className="relative group flex items-center justify-center gap-3 py-4 px-6 bg-gray-800/50 border border-gray-700 rounded-xl hover:bg-gray-800 hover:border-gray-600 transition-all duration-300"
+                  disabled={isLoading || isLocked}
+                  className="relative group flex items-center justify-center gap-3 py-4 px-6 bg-gray-800/50 border border-gray-700 rounded-xl hover:bg-gray-800 hover:border-gray-600 transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   {/* Hover Glow */}
                   <div className="absolute -inset-0.5 bg-gradient-to-r from-purple-500/20 to-gray-500/20 rounded-xl blur opacity-0 group-hover:opacity-50 transition-opacity duration-300" />
@@ -379,6 +680,23 @@ const Login = () => {
         <div className="absolute top-0 left-0 w-64 h-64 border-l-2 border-t-2 border-yellow-500/20 rounded-tl-3xl" />
         <div className="absolute bottom-0 right-0 w-64 h-64 border-r-2 border-b-2 border-yellow-500/20 rounded-br-3xl" />
       </div>
+
+      {/* Animation Styles */}
+      <style jsx>{`
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+            transform: translateY(-10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        .animate-fadeIn {
+          animation: fadeIn 0.3s ease-out forwards;
+        }
+      `}</style>
     </Layout>
   );
 };

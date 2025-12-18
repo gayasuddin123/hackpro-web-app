@@ -5,15 +5,21 @@ import About from "./pages/About";
 import Courses from "./pages/Courses";
 import SignUp from "./pages/SignUp";
 import Login from "./pages/Login";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 import ContactUs from "./pages/ContactUs";
 import CourseDetail from "./pages/CourseDetail";
 import FreeCourses from "./pages/FreeCourses";
 import TrainingPlacement from "./pages/TrainingPlacement";
 import Certificate from "./pages/Certificate";
 import VerifyCertificate from "./pages/VerifyCertificate";
-import Blog from "./pages/Blog"; // Add this
+import Blog from "./pages/Blog";
 import BlogDetail from "./pages/BlogDetail";
-import ScrollToTop from "./components/layout/ScrollToTop"
+import ScrollToTop from "./components/layout/ScrollToTop";
+import Dashboard from "./pages/Dashboard";
+import Profile from "./pages/Profile";
+import MyCourses from "./pages/MyCourses";
+import MyCertificates from "./pages/MyCertificates";
 
 function App() {
   return (
@@ -25,6 +31,8 @@ function App() {
         <Route path="/course" element={<Courses />} />
         <Route path="/signup" element={<SignUp />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password/:token" element={<ResetPassword />} />
         <Route path="/contact" element={<ContactUs />} />
         <Route path="/courses/:slug" element={<CourseDetail />} />
         <Route path="/free-courses" element={<FreeCourses />} />
@@ -33,6 +41,10 @@ function App() {
         <Route path="/training/verify" element={<VerifyCertificate />} />
         <Route path="/blog" element={<Blog />} />
         <Route path="/blog/:slug" element={<BlogDetail />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/profile" element={<Profile />} />
+        <Route path="/my-courses" element={<MyCourses />} />
+        <Route path="/my-certificates" element={<MyCertificates />} />
       </Routes>
     </Router>
   );
