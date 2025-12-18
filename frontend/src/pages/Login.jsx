@@ -130,7 +130,7 @@ const Login = () => {
     setRemainingAttempts(null);
     
     try {
-      const response = await axios.post(`${API_URL}/auth/login`, {
+      const response = await axios.post(`${API_URL}/api/v1/auth/login`, {
         email: formData.email.toLowerCase().trim(),
         password: formData.password,
       });
