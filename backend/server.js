@@ -42,7 +42,7 @@ app.use("/api/", limiter);
 const allowedOrigins = [
   "http://localhost:5173",
   "http://localhost:3000",
-  "https://hackpro-web-app-git-main-gayasuddins-projects.vercel.app",
+  "https://hackpro-web-app.vercel.app/",
 ];
 
 app.use(
