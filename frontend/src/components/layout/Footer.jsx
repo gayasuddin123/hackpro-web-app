@@ -8,9 +8,9 @@ const Footer = () => {
 
   // Contact Info
   const contactInfo = {
-    address: "A76 CHANDGANJ GARDEN KAPOORTHALA LUCKNOW 226024",
-    phone: "+919026764985",
-    email: "INFO@CODEVIRUSSEC.IN",
+    address: "LUCKNOW, UTTAR PRADESH",
+    phone: "+919918103909",
+    email: "info@codevirussec.in",
     companyName: "HackPro Academy",
   };
 
@@ -405,7 +405,7 @@ const Footer = () => {
             <span className="text-lime-400 font-medium">
               {contactInfo.companyName}
             </span>
-            . All rights reserved.
+            . Powered by Codevirus Security.
           </div>
 
           {/* Legal Links */}
