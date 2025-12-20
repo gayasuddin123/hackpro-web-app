@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Layout from "../components/layout/Layout";
 import axios from "axios";
@@ -26,18 +26,7 @@ const SignUp = () => {
   const [errors, setErrors] = useState({});
   const [apiError, setApiError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
-
-  // OTP States
-  const [otp, setOtp] = useState(["", "", "", "", "", ""]);
-  const [otpSent, setOtpSent] = useState(false);
-  const [otpVerified, setOtpVerified] = useState(false);
-  const [verificationToken, setVerificationToken] = useState("");
-  const [sendingOtp, setSendingOtp] = useState(false);
-  const [verifyingOtp, setVerifyingOtp] = useState(false);
-  const [resendTimer, setResendTimer] = useState(0);
   const [showCountryDropdown, setShowCountryDropdown] = useState(false);
-
-  const otpInputRefs = useRef([]);
 
   const skillLevels = ["Beginner", "Intermediate", "Advanced"];
   const interests = ["Cybersecurity", "AI", "Python"];
@@ -55,17 +44,6 @@ const SignUp = () => {
     { code: "+81", country: "Japan", flag: "🇯🇵" },
     { code: "+86", country: "China", flag: "🇨🇳" },
   ];
-
-  // Resend Timer Effect
-  useEffect(() => {
-    let interval;
-    if (resendTimer > 0) {
-      interval = setInterval(() => {
-        setResendTimer((prev) => prev - 1);
-      }, 1000);
-    }
-    return () => clearInterval(interval);
-  }, [resendTimer]);
 
   // Clear API error after 5 seconds
   useEffect(() => {
@@ -109,14 +87,6 @@ const SignUp = () => {
       [name]: value,
     }));
 
-    // Reset OTP verification if mobile number changes
-    if (name === "mobileNumber") {
-      setOtpSent(false);
-      setOtpVerified(false);
-      setVerificationToken("");
-      setOtp(["", "", "", "", "", ""]);
-    }
-
     // Clear college name if goal is not college
     if (name === "goal" && value !== "College") {
       setFormData((prev) => ({
@@ -143,57 +113,6 @@ const SignUp = () => {
       countryCode: code,
     }));
     setShowCountryDropdown(false);
-    // Reset OTP if country code changes
-    setOtpSent(false);
-    setOtpVerified(false);
-    setVerificationToken("");
-    setOtp(["", "", "", "", "", ""]);
-  };
-
-  const handleOtpChange = (index, value) => {
-    // Only allow numbers
-    if (value && !/^\d+$/.test(value)) return;
-
-    const newOtp = [...otp];
-    newOtp[index] = value.slice(-1); // Only take last character
-    setOtp(newOtp);
-
-    // Clear OTP error
-    if (errors.otp) {
-      setErrors((prev) => ({ ...prev, otp: "" }));
-    }
-
-    // Auto-focus next input
-    if (value && index < 5) {
-      otpInputRefs.current[index + 1]?.focus();
-    }
-  };
-
-  const handleOtpKeyDown = (index, e) => {
-    // Handle backspace
-    if (e.key === "Backspace" && !otp[index] && index > 0) {
-      otpInputRefs.current[index - 1]?.focus();
-    }
-  };
-
-  const handleOtpPaste = (e) => {
-    e.preventDefault();
-    const pastedData = e.clipboardData.getData("text").slice(0, 6);
-    if (!/^\d+$/.test(pastedData)) return;
-
-    const newOtp = [...otp];
-    pastedData.split("").forEach((char, index) => {
-      if (index < 6) newOtp[index] = char;
-    });
-    setOtp(newOtp);
-
-    // Focus the next empty input or the last input
-    const nextEmptyIndex = newOtp.findIndex((val) => !val);
-    if (nextEmptyIndex !== -1) {
-      otpInputRefs.current[nextEmptyIndex]?.focus();
-    } else {
-      otpInputRefs.current[5]?.focus();
-    }
   };
 
   const handleInterestChange = (interest) => {
@@ -220,91 +139,6 @@ const SignUp = () => {
       return "Please enter a valid 10-digit mobile number";
     }
     return "";
-  };
-
-  // ==================== API CALLS ====================
-
-  // Send OTP
-  const handleSendOtp = async () => {
-    const mobileError = validateMobileNumber();
-    if (mobileError) {
-      setErrors((prev) => ({ ...prev, mobileNumber: mobileError }));
-      return;
-    }
-
-    setSendingOtp(true);
-    setApiError("");
-
-    try {
-      const response = await axios.post(`${API_URL}/api/v1/auth/send-otp`, {
-        countryCode: formData.countryCode,
-        mobileNumber: formData.mobileNumber,
-        purpose: "registration",
-      });
-
-      if (response.data.success) {
-        setOtpSent(true);
-        setResendTimer(30);
-        setOtp(["", "", "", "", "", ""]);
-        setErrors((prev) => ({ ...prev, mobileNumber: "" }));
-
-        setTimeout(() => {
-          otpInputRefs.current[0]?.focus();
-        }, 100);
-      }
-    } catch (error) {
-      const message =
-        error.response?.data?.message ||
-        "Failed to send OTP. Please try again.";
-      setErrors((prev) => ({ ...prev, mobileNumber: message }));
-
-      // Handle rate limiting
-      if (error.response?.data?.waitTime) {
-        setResendTimer(error.response.data.waitTime);
-      }
-    } finally {
-      setSendingOtp(false);
-    }
-  };
-
-  // Verify OTP
-  const handleVerifyOtp = async () => {
-    const otpValue = otp.join("");
-
-    if (otpValue.length !== 6) {
-      setErrors((prev) => ({ ...prev, otp: "Please enter complete OTP" }));
-      return;
-    }
-
-    setVerifyingOtp(true);
-    setApiError("");
-
-    try {
-      const response = await axios.post(`${API_URL}/api/v1/auth/verify-otp`, {
-        countryCode: formData.countryCode,
-        mobileNumber: formData.mobileNumber,
-        otp: otpValue,
-        purpose: "registration",
-      });
-
-      if (response.data.success) {
-        setOtpVerified(true);
-        setVerificationToken(response.data.data.verificationToken);
-        setErrors((prev) => ({ ...prev, otp: "", mobileNumber: "" }));
-      }
-    } catch (error) {
-      const message =
-        error.response?.data?.message || "Invalid OTP. Please try again.";
-      setErrors((prev) => ({ ...prev, otp: message }));
-    } finally {
-      setVerifyingOtp(false);
-    }
-  };
-
-  // Resend OTP
-  const handleResendOtp = async () => {
-    if (resendTimer > 0) return;
-    await handleSendOtp();
   };
 
   // Form Validation
@@ -337,8 +171,6 @@ const SignUp = () => {
     const mobileError = validateMobileNumber();
     if (mobileError) {
       newErrors.mobileNumber = mobileError;
-    } else if (!otpVerified) {
-      newErrors.mobileNumber = "Please verify your mobile number";
     }
 
     if (!formData.skillLevel) {
@@ -374,15 +206,6 @@ const SignUp = () => {
     setIsLoading(true);
     setApiError("");
     setSuccessMessage("");
-    console.log("📤 Sending registration data:", {
-      fullName: formData.fullName,
-      email: formData.email,
-      mobileNumber: formData.mobileNumber,
-      verificationToken: verificationToken
-        ? verificationToken.substring(0, 10) + "..."
-        : "none",
-      otpVerified,
-    });
 
     try {
       const response = await axios.post(`${API_URL}/api/v1/auth/register`, {
@@ -391,7 +214,6 @@ const SignUp = () => {
         password: formData.password,
         countryCode: formData.countryCode,
         mobileNumber: formData.mobileNumber,
-        verificationToken: verificationToken,
         skillLevel: formData.skillLevel,
         interestedIn: formData.interestedIn,
         goal: formData.goal,
@@ -738,7 +560,7 @@ const SignUp = () => {
                   )}
                 </div>
 
-                {/* Mobile Number Field with OTP */}
+                {/* Mobile Number Field (Simplified - No OTP) */}
                 <div className="space-y-2">
                   <label className="block text-sm font-medium text-gray-300">
                     Mobile Number
@@ -758,22 +580,15 @@ const SignUp = () => {
                         <button
                           type="button"
                           onClick={() =>
-                            !otpVerified &&
                             !isLoading &&
                             setShowCountryDropdown(!showCountryDropdown)
                           }
-                          disabled={otpVerified || isLoading}
+                          disabled={isLoading}
                           className={`flex items-center gap-1 h-full pl-4 pr-2 py-4 bg-gray-950/80 border-r-0 rounded-l-xl text-white focus:outline-none transition-all duration-300 ${
                             errors.mobileNumber
                               ? "border border-red-500"
-                              : otpVerified
-                              ? "border border-green-500"
                               : "border border-gray-700"
-                          } ${
-                            otpVerified || isLoading
-                              ? "opacity-60 cursor-not-allowed"
-                              : ""
-                          }`}
+                          } ${isLoading ? "opacity-60 cursor-not-allowed" : ""}`}
                         >
                           <span className="text-lg">
                             {selectedCountry?.flag}
@@ -781,23 +596,21 @@ const SignUp = () => {
                           <span className="text-sm text-gray-300">
                             {formData.countryCode}
                           </span>
-                          {!otpVerified && (
-                            <svg
-                              className={`w-4 h-4 text-gray-500 transition-transform duration-300 ${
-                                showCountryDropdown ? "rotate-180" : ""
-                              }`}
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M19 9l-7 7-7-7"
-                              />
-                            </svg>
-                          )}
+                          <svg
+                            className={`w-4 h-4 text-gray-500 transition-transform duration-300 ${
+                              showCountryDropdown ? "rotate-180" : ""
+                            }`}
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M19 9l-7 7-7-7"
+                            />
+                          </svg>
                         </button>
 
                         {/* Country Code Dropdown Menu */}
@@ -837,82 +650,15 @@ const SignUp = () => {
                         onChange={handleInputChange}
                         onFocus={() => setFocusedField("mobileNumber")}
                         onBlur={() => setFocusedField(null)}
-                        disabled={otpVerified || isLoading}
+                        disabled={isLoading}
                         maxLength={10}
-                        className={`flex-1 pl-4 pr-4 py-4 bg-gray-950/80 border-l-0 border-r-0 text-white placeholder-gray-500 focus:outline-none transition-all duration-300 ${
+                        className={`flex-1 pl-4 pr-4 py-4 bg-gray-950/80 border-l-0 rounded-r-xl text-white placeholder-gray-500 focus:outline-none transition-all duration-300 ${
                           errors.mobileNumber
-                            ? "border-y border-red-500"
-                            : otpVerified
-                            ? "border-y border-green-500"
-                            : "border-y border-gray-700"
-                        } ${
-                          otpVerified || isLoading
-                            ? "opacity-60 cursor-not-allowed"
-                            : ""
-                        }`}
+                            ? "border-y border-r border-red-500"
+                            : "border-y border-r border-gray-700"
+                        } ${isLoading ? "opacity-60 cursor-not-allowed" : ""}`}
                         placeholder="Enter 10-digit mobile number"
                       />
-
-                      {/* Send OTP / Verified Button */}
-                      {otpVerified ? (
-                        <div className="flex items-center gap-2 px-4 py-4 bg-green-500/20 border border-green-500 rounded-r-xl">
-                          <svg
-                            className="w-5 h-5 text-green-400"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M5 13l4 4L19 7"
-                            />
-                          </svg>
-                          <span className="text-green-400 text-sm font-medium">
-                            Verified
-                          </span>
-                        </div>
-                      ) : (
-                        <button
-                          type="button"
-                          onClick={handleSendOtp}
-                          disabled={
-                            sendingOtp || !formData.mobileNumber || isLoading
-                          }
-                          className={`px-4 py-4 bg-yellow-500/20 border rounded-r-xl text-yellow-400 font-medium text-sm hover:bg-yellow-500/30 focus:outline-none transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed ${
-                            errors.mobileNumber
-                              ? "border border-red-500"
-                              : "border border-gray-700 hover:border-yellow-500/50"
-                          }`}
-                        >
-                          {sendingOtp ? (
-                            <svg
-                              className="w-5 h-5 animate-spin"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                            >
-                              <circle
-                                className="opacity-25"
-                                cx="12"
-                                cy="12"
-                                r="10"
-                                stroke="currentColor"
-                                strokeWidth="4"
-                              />
-                              <path
-                                className="opacity-75"
-                                fill="currentColor"
-                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                              />
-                            </svg>
-                          ) : otpSent ? (
-                            "Resend"
-                          ) : (
-                            "Send OTP"
-                          )}
-                        </button>
-                      )}
                     </div>
                   </div>
 
@@ -933,142 +679,6 @@ const SignUp = () => {
                       </svg>
                       {errors.mobileNumber}
                     </p>
-                  )}
-
-                  {/* OTP Input Section */}
-                  {otpSent && !otpVerified && (
-                    <div className="mt-4 p-4 bg-gray-950/50 rounded-xl border border-gray-700 space-y-4 animate-fadeIn">
-                      <div className="flex items-center justify-between">
-                        <p className="text-sm text-gray-400">
-                          Enter the 6-digit OTP sent to{" "}
-                          <span className="text-yellow-400 font-medium">
-                            {formData.countryCode} {formData.mobileNumber}
-                          </span>
-                        </p>
-                        {resendTimer > 0 && (
-                          <span className="text-sm text-gray-500">
-                            Resend in {resendTimer}s
-                          </span>
-                        )}
-                      </div>
-
-                      {/* OTP Input Boxes */}
-                      <div className="flex justify-center gap-2 sm:gap-3">
-                        {otp.map((digit, index) => (
-                          <input
-                            key={index}
-                            ref={(el) => (otpInputRefs.current[index] = el)}
-                            type="text"
-                            inputMode="numeric"
-                            maxLength={1}
-                            value={digit}
-                            onChange={(e) =>
-                              handleOtpChange(index, e.target.value)
-                            }
-                            onKeyDown={(e) => handleOtpKeyDown(index, e)}
-                            onPaste={handleOtpPaste}
-                            disabled={isLoading}
-                            className={`w-10 h-12 sm:w-12 sm:h-14 text-center text-xl font-bold bg-gray-900 border-2 rounded-lg text-white focus:outline-none focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20 transition-all duration-300 ${
-                              errors.otp
-                                ? "border-red-500"
-                                : digit
-                                ? "border-yellow-500/50"
-                                : "border-gray-700"
-                            }`}
-                          />
-                        ))}
-                      </div>
-
-                      {errors.otp && (
-                        <p className="text-red-400 text-sm flex items-center justify-center gap-1">
-                          <svg
-                            className="w-4 h-4"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                            />
-                          </svg>
-                          {errors.otp}
-                        </p>
-                      )}
-
-                      {/* Verify & Resend Buttons */}
-                      <div className="flex items-center justify-between gap-4">
-                        <button
-                          type="button"
-                          onClick={handleResendOtp}
-                          disabled={resendTimer > 0 || sendingOtp || isLoading}
-                          className="text-sm text-yellow-400 hover:text-yellow-300 disabled:text-gray-600 disabled:cursor-not-allowed transition-colors duration-300"
-                        >
-                          {sendingOtp ? "Sending..." : "Resend OTP"}
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={handleVerifyOtp}
-                          disabled={
-                            verifyingOtp ||
-                            otp.join("").length !== 6 ||
-                            isLoading
-                          }
-                          className="px-6 py-2 bg-yellow-500 text-gray-900 font-semibold rounded-lg hover:bg-yellow-400 focus:outline-none focus:ring-2 focus:ring-yellow-500/50 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 flex items-center gap-2"
-                        >
-                          {verifyingOtp ? (
-                            <>
-                              <svg
-                                className="w-4 h-4 animate-spin"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                              >
-                                <circle
-                                  className="opacity-25"
-                                  cx="12"
-                                  cy="12"
-                                  r="10"
-                                  stroke="currentColor"
-                                  strokeWidth="4"
-                                />
-                                <path
-                                  className="opacity-75"
-                                  fill="currentColor"
-                                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                                />
-                              </svg>
-                              Verifying...
-                            </>
-                          ) : (
-                            <>
-                              <svg
-                                className="w-4 h-4"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                                />
-                              </svg>
-                              Verify OTP
-                            </>
-                          )}
-                        </button>
-                      </div>
-
-                      {import.meta.env.DEV && (
-                        <p className="text-xs text-gray-600 text-center">
-                          Dev Mode: Check console for OTP
-                        </p>
-                      )}
-                    </div>
                   )}
                 </div>
 
@@ -1854,22 +1464,6 @@ const SignUp = () => {
                 />
               </svg>
               <span>Secure Data Storage</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <svg
-                className="w-4 h-4 text-yellow-500"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={1.5}
-                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-              <span>OTP Verified</span>
             </div>
           </div>
         </div>
