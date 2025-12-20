@@ -23,7 +23,7 @@ app.set("trust proxy", 1);
 const allowedOrigins = [
   "http://localhost:5173",
   "http://localhost:3000",
-  "https://hackpro-web-app.vercel.app", // ❌ NO trailing slash
+  process.env.FRONTEND_URL, // ❌ NO trailing slash
 ];
 
 app.use(
