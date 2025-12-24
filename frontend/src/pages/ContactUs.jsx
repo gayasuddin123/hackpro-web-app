@@ -383,8 +383,8 @@ const ContactUs = () => {
                       </div>
                       <div>
                         <p className="text-sm text-gray-400 mb-1 uppercase tracking-wider">Address</p>
-                        <p className="text-white text-lg font-medium">123 Cyber Street</p>
-                        <p className="text-gray-300">Tech City, TC 12345</p>
+                        <p className="text-white text-lg font-medium">Lucknow, Uttar Pradesh</p>
+                        <p className="text-gray-300">India</p>
                       </div>
                     </div>
 
@@ -397,8 +397,8 @@ const ContactUs = () => {
                       </div>
                       <div>
                         <p className="text-sm text-gray-400 mb-1 uppercase tracking-wider">Phone</p>
-                        <p className="text-white text-lg font-medium">+1 (555) 123-4567</p>
-                        <p className="text-gray-300">+1 (555) 987-6543</p>
+                        <p className="text-white text-lg font-medium">+919918103909</p>
+                        {/* <p className="text-gray-300">+1 (555) 987-6543</p> */}
                       </div>
                     </div>
 
@@ -411,8 +411,8 @@ const ContactUs = () => {
                       </div>
                       <div>
                         <p className="text-sm text-gray-400 mb-1 uppercase tracking-wider">Email</p>
-                        <p className="text-white text-lg font-medium">contact@cybersecure.com</p>
-                        <p className="text-gray-300">support@cybersecure.com</p>
+                        <p className="text-white text-lg font-medium">contact@hackrpo.acedmey</p>
+                        {/* <p className="text-gray-300">support@cybersecure.com</p> */}
                       </div>
                     </div>
                   </div>
@@ -436,7 +436,7 @@ const ContactUs = () => {
                     </div>
                     <div className="flex justify-between items-center py-3 border-b border-gray-800">
                       <span className="text-white font-medium">Saturday</span>
-                      <span className="text-gray-400">10:00 AM - 4:00 PM</span>
+                      <span className="text-gray-400">10:00 AM - 6:00 PM</span>
                     </div>
                     <div className="flex justify-between items-center py-3 border-b border-gray-800">
                       <span className="text-white font-medium">Sunday</span>

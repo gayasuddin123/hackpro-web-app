@@ -8,9 +8,9 @@ const Footer = () => {
 
   // Contact Info
   const contactInfo = {
-    address: "LUCKNOW, UTTAR PRADESH",
+    address: "Lucknow, Uttar Pradesh",
     phone: "+919918103909",
-    email: "Contact@hackrpo.acedmey",
+    email: "contact@hackrpo.acedmey",
     companyName: "HackPro Academy",
   };
 
