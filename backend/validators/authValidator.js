@@ -105,37 +105,3 @@ exports.resetPasswordValidator = [
     ),
 ];
 
-exports.sendOTPValidator = [
-  body("countryCode")
-    .notEmpty()
-    .withMessage("Country code is required")
-    .matches(/^\+[0-9]{1,4}$/)
-    .withMessage("Please provide a valid country code"),
-
-  body("mobileNumber")
-    .notEmpty()
-    .withMessage("Mobile number is required")
-    .matches(/^[0-9]{10}$/)
-    .withMessage("Please provide a valid 10-digit mobile number"),
-
-  body("purpose")
-    .optional()
-    .isIn(["registration", "login", "password-reset", "phone-update"])
-    .withMessage("Invalid OTP purpose"),
-];
-
-exports.verifyOTPValidator = [
-  body("countryCode")
-    .notEmpty()
-    .withMessage("Country code is required"),
-
-  body("mobileNumber")
-    .notEmpty()
-    .withMessage("Mobile number is required"),
-
-  body("otp")
-    .notEmpty()
-    .withMessage("OTP is required")
-    .matches(/^[0-9]{6}$/)
-    .withMessage("Please provide a valid 6-digit OTP"),
-];

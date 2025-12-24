@@ -29,7 +29,7 @@ const userSchema = new mongoose.Schema(
       select: false,
     },
 
-    // Phone with OTP Verification
+    
     phone: {
       countryCode: {
         type: String,
@@ -39,11 +39,7 @@ const userSchema = new mongoose.Schema(
         type: String,
         match: [/^[0-9]{10}$/, "Please provide valid 10 digit phone number"],
       },
-      isVerified: {
-        type: Boolean,
-        default: false,
-      },
-      verifiedAt: Date,
+      
     },
 
     // Profile Info
