@@ -21,7 +21,7 @@ const MyCourses = () => {
       setLoading(true);
       const token = localStorage.getItem('token');
       
-      let url = `${API_URL}/users/my-courses?sort=${sort}`;
+      let url = `${API_URL}/api/v1/users/my-courses?sort=${sort}`;
       if (filter !== 'all') {
         url += `&status=${filter}`;
       }

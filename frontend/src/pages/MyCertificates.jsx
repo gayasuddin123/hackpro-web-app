@@ -17,7 +17,7 @@ const MyCertificates = () => {
   const fetchCertificates = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(`${API_URL}/users/my-certificates`, {
+      const response = await axios.get(`${API_URL}/api/v1/users/my-certificates`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
