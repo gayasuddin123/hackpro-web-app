@@ -188,7 +188,7 @@ const Profile = () => {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.delete(`${API_URL}/users/avatar`, {
+      const response = await axios.delete(`${API_URL}/api/v1/users/avatar`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
