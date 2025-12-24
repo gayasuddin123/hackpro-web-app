@@ -88,7 +88,7 @@ const Profile = () => {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.put(
-        `${API_URL}/users/profile`,
+        `${API_URL}/api/v1/users/profile`,
         {
           name: formData.name,
           phone: formData.phone,
@@ -152,7 +152,7 @@ const Profile = () => {
       const formData = new FormData();
       formData.append('avatar', file);
 
-      const response = await axios.put(`${API_URL}/users/avatar`, formData, {
+      const response = await axios.put(`${API_URL}/api/v1/users/avatar`, formData, {
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'multipart/form-data',
