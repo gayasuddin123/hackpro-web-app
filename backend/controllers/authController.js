@@ -78,17 +78,17 @@ exports.register = async (req, res, next) => {
     const emailVerificationToken = user.getEmailVerificationToken();
     await user.save({ validateBeforeSave: false });
 
-    // Send welcome email (optional)
-    try {
-      const verifyUrl = `${process.env.FRONTEND_URL}/verify-email/${emailVerificationToken}`;
-      await sendEmail({
-        email: user.email,
-        subject: "Welcome to HackPro Academy",
-        html: `<h1>Welcome ${user.name}!</h1><p>Please verify your email: <a href="${verifyUrl}">Click here</a></p>`,
-      });
-    } catch (emailError) {
-      console.log("⚠️ Welcome email failed:", emailError.message);
-    }
+    // // Send welcome email (optional)
+    // try {
+    //   const verifyUrl = `${process.env.FRONTEND_URL}/verify-email/${emailVerificationToken}`;
+    //   await sendEmail({
+    //     email: user.email,
+    //     subject: "Welcome to HackPro Academy",
+    //     html: `<h1>Welcome ${user.name}!</h1><p>Please verify your email: <a href="${verifyUrl}">Click here</a></p>`,
+    //   });
+    // } catch (emailError) {
+    //   console.log("⚠️ Welcome email failed:", emailError.message);
+    // }
 
     sendTokenResponse(user, 201, res, "Registration successful!");
   } catch (error) {

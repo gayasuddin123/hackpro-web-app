@@ -1,9 +1,13 @@
 import React, { useEffect, useRef } from 'react';
 import Layout from '../components/layout/Layout';
 import logo from '../assets/images/logo.png';
+import { Link, useNavigate } from "react-router-dom";
+
 
 const Homepage = () => {
   const logoRef = useRef(null);
+  const navigate = useNavigate();
+
 
   // ==================== ANIMATIONS ====================
   useEffect(() => {
@@ -234,10 +238,10 @@ const Homepage = () => {
 
               {/* CTA Buttons */}
               <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 pt-2 sm:pt-4 justify-center lg:justify-start">
-                <button className="bg-lime-400 text-black px-6 sm:px-8 py-3 rounded-md font-semibold hover:bg-lime-300 transition-all duration-300 shadow-lg shadow-lime-400/50 text-sm sm:text-base">
+                <button className="bg-lime-400 text-black px-6 sm:px-8 py-3 rounded-md font-semibold hover:bg-lime-300 transition-all duration-300 shadow-lg shadow-lime-400/50 text-sm sm:text-base" onClick={() => navigate("/course")}>
                   Get Started
                 </button>
-                <button className="border-2 border-gray-600 text-white px-6 sm:px-8 py-3 rounded-md font-semibold hover:border-lime-400 hover:text-lime-400 transition-all duration-300 text-sm sm:text-base">
+                <button className="border-2 border-gray-600 text-white px-6 sm:px-8 py-3 rounded-md font-semibold hover:border-lime-400 hover:text-lime-400 transition-all duration-300 text-sm sm:text-base" onClick={() => navigate("/contact")} >
                   Contact Us
                 </button>
               </div>
@@ -377,13 +381,13 @@ const Homepage = () => {
 
           {/* View All Services Button */}
           <div className="text-center">
-            <a
-              href="#services"
+            <Link
+              to="/course"
               className="inline-flex items-center gap-2 text-lime-400 hover:text-lime-300 text-base sm:text-lg font-semibold transition-colors duration-300"
             >
               View All Services
               {getIcon('arrow', 'w-4 h-4 sm:w-5 sm:h-5')}
-            </a>
+            </Link>
           </div>
         </div>
       </section>

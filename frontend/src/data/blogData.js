@@ -1,4 +1,12 @@
 // src/data/blogData.js
+import bugbounty from '../assets/images/blog/bug-bounty.jpeg';
+import cyberThreats from '../assets/images/blog/cyber-threats.jpg';
+import networkSegmentation from '../assets/images/blog/network-segmentation.png';
+import penetrationTesting from '../assets/images/blog/penetration-testing.jpg';
+import socOperations from '../assets/images/blog/soc-operations.jpg';
+import zeroTrust from '../assets/images/blog/zero-trust.webp';
+
+    
 
 /**
  * ============================================
@@ -29,7 +37,7 @@ export const blogPosts = [
       <h2>Conclusion</h2>
       <p>Zero Trust is not a product but a strategy. By implementing these principles, organizations can significantly reduce their attack surface and improve their security posture.</p>
     `,
-    thumbnail: '/images/blog/zero-trust.jpg',
+    thumbnail: zeroTrust,
     category: 'Security',
     tags: ['Zero Trust', 'Enterprise Security', 'Network Security', 'Cybersecurity'],
     author: {
@@ -64,7 +72,7 @@ export const blogPosts = [
       <h2>Conclusion</h2>
       <p>Staying informed about these threats is the first step in protecting your organization.</p>
     `,
-    thumbnail: '/images/blog/cyber-threats.jpg',
+    thumbnail: cyberThreats,
     category: 'Threats',
     tags: ['Cyber Threats', 'Ransomware', 'AI Security', 'Cloud Security'],
     author: {
@@ -100,7 +108,7 @@ export const blogPosts = [
       <h2>SOC Analyst Tiers</h2>
       <p>Learn about the different tiers of SOC analysts and their responsibilities.</p>
     `,
-    thumbnail: '/images/blog/soc-operations.jpg',
+    thumbnail: socOperations,
     category: 'Security',
     tags: ['SOC', 'Security Operations', 'SIEM', 'Incident Response'],
     author: {
@@ -133,7 +141,7 @@ export const blogPosts = [
         <li>Micro-segmentation</li>
       </ul>
     `,
-    thumbnail: '/images/blog/network-segmentation.jpg',
+    thumbnail: networkSegmentation,
     category: 'Network',
     tags: ['Network Security', 'Segmentation', 'Enterprise Security', 'VLAN'],
     author: {
@@ -166,7 +174,7 @@ export const blogPosts = [
         <li>Gray Box Testing</li>
       </ul>
     `,
-    thumbnail: '/images/blog/penetration-testing.jpg',
+    thumbnail: penetrationTesting,
     category: 'Security',
     tags: ['Penetration Testing', 'Ethical Hacking', 'Security Testing', 'Burp Suite'],
     author: {
@@ -199,7 +207,7 @@ export const blogPosts = [
         <li>Practice on Legal Platforms</li>
       </ul>
     `,
-    thumbnail: '/images/blog/bug-bounty.jpg',
+    thumbnail: bugbounty,
     category: 'Security',
     tags: ['Bug Bounty', 'Ethical Hacking', 'Web Security', 'Vulnerability Research'],
     author: {
