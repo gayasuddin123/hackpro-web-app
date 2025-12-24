@@ -23,11 +23,7 @@ exports.register = async (req, res, next) => {
     console.log("📝 Register Request:", {
       fullName,
       email,
-      mobileNumber,
-      hasVerificationToken: !!verificationToken,
-      verificationToken: verificationToken
-        ? verificationToken.substring(0, 10) + "..."
-        : "none",
+      mobileNumber
     });
 
     // Validate required fields
